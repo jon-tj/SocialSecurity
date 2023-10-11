@@ -28,6 +28,7 @@ from wtforms import (
     StringField,
     SubmitField,
     TextAreaField,
+    validators
 )
 
 # Defines all forms in the application, these will be instantiated by the template,
@@ -55,7 +56,14 @@ class RegisterForm(FlaskForm):
     first_name = StringField(label="First Name", render_kw={"placeholder": "First Name"})
     last_name = StringField(label="Last Name", render_kw={"placeholder": "Last Name"})
     username = StringField(label="Username", render_kw={"placeholder": "Username"})
-    password = PasswordField(label="Password", render_kw={"placeholder": "Password"})
+    password = PasswordField(
+        validators=[
+            validators.DataRequired(message="Please enter a password."),
+            validators.EqualTo('confirm_password', message='Passwords must match')
+        ],
+        label="Password",
+        render_kw={"placeholder": "Password"},
+        )
     confirm_password = PasswordField(label="Confirm Password", render_kw={"placeholder": "Confirm Password"})
     submit = SubmitField(label="Sign Up")
 

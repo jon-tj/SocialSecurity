@@ -11,7 +11,6 @@ from flask import flash, redirect, render_template, send_from_directory, url_for
 from app import app, sqlite
 from app.forms import CommentsForm, FriendsForm, IndexForm, PostForm, ProfileForm
 
-
 @app.route("/", methods=["GET", "POST"])
 @app.route("/index", methods=["GET", "POST"])
 def index():
@@ -41,7 +40,7 @@ def index():
         elif user["password"] == login_form.password.data:
             return redirect(url_for("stream", username=login_form.username.data))
 
-    elif register_form.is_submitted() and register_form.submit.data:
+    elif register_form.is_submitted() and register_form.submit.data and register_form.validate(register_form):
         insert_user = f"""
             INSERT INTO Users (username, first_name, last_name, password)
             VALUES ('{register_form.username.data}', '{register_form.first_name.data}', '{register_form.last_name.data}', '{register_form.password.data}');
@@ -69,7 +68,7 @@ def stream(username: str):
         """
     user = sqlite.query(get_user, one=True)
 
-    if post_form.is_submitted():
+    if post_form.is_submitted() and post_form.validate(): #? Added validation
         if post_form.image.data:
             path = Path(app.instance_path) / app.config["UPLOADS_FOLDER_PATH"] / post_form.image.data.filename
             post_form.image.data.save(path)

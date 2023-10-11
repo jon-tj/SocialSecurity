@@ -16,9 +16,9 @@
 {% endwith %}
 <!-- If form is defined, iterate over form errors and display them. -->
 {% if form is defined %}
-  {% for _, errors in form.errors.items() %}
+  {% for name, errors in form.errors.items() %}
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-      {{ ', '.join(errors) }}
+      {{ 'Cant complete '+name+": "+', '.join(errors)+str(errors['password']) }}
       <button type="button"
               class="btn-close"
               data-bs-dismiss="alert"
