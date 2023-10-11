@@ -18,9 +18,13 @@
 {% if form is defined %}
   {% for name, errors in form.errors.items() %}
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-      Can't complete {{ name }}: 
+      Can't complete {{ name }}:
       {% for err in errors %}
-        {{ errors[err][0]}}
+        {% if errors[err] %}
+          {{ errors[err][0]}}
+        {% else %}
+          {{ err }}
+        {% endif %}
       {% endfor %}
       <button type="button"
               class="btn-close"
