@@ -1,0 +1,52 @@
+[project]
+name = "social-insecurity"
+version = "1.0.0"
+description = ""
+authors = [{ name = "solbero", email = "njosol@pm.me" }]
+dependencies = [
+    "flask[dotenv]>=2.3.0",
+    "Flask-WTF>=1.1.0",
+]
+requires-python = ">=3.9"
+license = { text = "MIT" }
+
+[build-system]
+requires = ["pdm-pep517>=1.0.0"]
+build-backend = "pdm.pep517.api"
+
+[tool.pdm]
+[tool.pdm.dev-dependencies]
+dev = [
+    "black>=23.7.0",
+    "djlint>=1.32.0",
+    "pytest>=7.4.0",
+    "tox>=4.7.0",
+    "ruff>=0.0.283",
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py39', 'py310', 'py311', 'py312']
+
+[tool.isort]
+profile = "black"
+
+[tool.djlint]
+indent = 2
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py39, py310, py311, py312
+isolated_build = true
+
+[testenv]
+deps =
+    flask
+    pytest
+commands = pytest {posargs}
+"""
+
+[tool.ruff]
+line-length = 120
+target-version = 'py39'

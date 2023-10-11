@@ -1,0 +1,41 @@
+{% extends "base.html.j2" %}
+{% block content %}
+  <!-- Post creation card -->
+  <div class="container-flex justify-content-center">
+    <div class="row justify-content-center">
+      <div class="col-sm-12 col-lg-6">
+        <div class="card mb-3">
+          <div class="card-body">
+            <h4 class="card-title mb-3">Share something</h4>
+            <form action="" method="post" novalidate enctype="multipart/form-data">
+              <div class="mb-3">{{ form.content(class_="form-control") }}</div>
+              <div class="mb-3">{{ form.image(class_="form-control") }}</div>
+              <div>{{ form.submit(class_="btn btn-primary") }}</div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Posts feed cards -->
+    {% for post in posts %}
+      <div class="row justify-content-center">
+        <div class="col-sm-12 col-lg-6">
+          <div class="card mb-3">
+            <div class="card-header">
+              <div class="row align-items-center">
+                <a class="col-4" href={{ url_for('profile', username=post.username) }}><span class="fa fa-user me-1" aria-hidden="true"></span>{{ post.username }}</a>
+                <span class="col-8 text-right">{{ post.creation_time }}</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="card-text">{{ post.content }}</p>
+              {% if post.image %}<img src="{{ url_for('uploads', filename=post.image) }}"
+     class="img-fluid mb-3">{% endif %}
+              <a href={{ url_for('comments', username=username, post_id=post.id) }}><span class="fa fa-comment me-1" aria-hidden="true"></span>Comments ({{ post.cc }})</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock content %}
