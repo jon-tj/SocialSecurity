@@ -11,6 +11,11 @@ from flask import flash, redirect, render_template, send_from_directory, url_for
 from app import app, sqlite
 from app.forms import CommentsForm, FriendsForm, IndexForm, PostForm, ProfileForm
 
+import re
+
+def htmlify(content):
+    return content.replace("'",'&apos;').replace('"','&quot;')
+
 @app.route("/", methods=["GET", "POST"])
 @app.route("/index", methods=["GET", "POST"])
 def index():
@@ -29,8 +34,8 @@ def index():
         get_user = f"""
             SELECT *
             FROM Users
-            WHERE username = '{login_form.username.data}';
-            """
+            WHERE username = '{htmlify(login_form.username.data)}';
+            """ #added htmlify to avoid SQL injection
         user = sqlite.query(get_user, one=True)
 
         if user is None:
@@ -43,8 +48,8 @@ def index():
     elif register_form.is_submitted() and register_form.submit.data and register_form.validate(register_form):
         insert_user = f"""
             INSERT INTO Users (username, first_name, last_name, password)
-            VALUES ('{register_form.username.data}', '{register_form.first_name.data}', '{register_form.last_name.data}', '{register_form.password.data}');
-            """
+            VALUES ('{htmlify(register_form.username.data)}', '{htmlify(register_form.first_name.data)}', '{htmlify(register_form.last_name.data)}', '{htmlify(register_form.password.data)}');
+            """ #added htmlify to avoid SQL injection
         sqlite.query(insert_user)
         flash("User successfully created!", category="success")
         return redirect(url_for("index"))
@@ -64,11 +69,13 @@ def stream(username: str):
     get_user = f"""
         SELECT *
         FROM Users
-        WHERE username = '{username}';
-        """
+        WHERE username = '{htmlify(username)}';
+        """ #added htmlify to avoid SQL injection
     user = sqlite.query(get_user, one=True)
 
     if post_form.is_submitted() and post_form.validate(): #? Added validation
+        post_form.image.data.filename = re.sub(r"[\'\"/\.]", "", post_form.image.data.filename)
+        #post_form.image.data.filename=post_form.image.data.filename.replace("'","").replace('"',"").replace("..","").replace("/","")
         if post_form.image.data:
             path = Path(app.instance_path) / app.config["UPLOADS_FOLDER_PATH"] / post_form.image.data.filename
             post_form.image.data.save(path)
@@ -76,8 +83,8 @@ def stream(username: str):
         insert_post = f"""
             INSERT INTO Posts (u_id, content, image, creation_time)
             
-            VALUES ({user["id"]}, '{post_form.content.data}', '{post_form.image.data.filename}', CURRENT_TIMESTAMP);
-            """
+            VALUES ({user["id"]}, '{htmlify(post_form.content.data)}', '{post_form.image.data.filename}', CURRENT_TIMESTAMP);
+            """ #added htmlify to avoid SQL injection
         sqlite.query(insert_post)
         return redirect(url_for("stream", username=username))
 
@@ -103,8 +110,8 @@ def comments(username: str, post_id: int):
     get_user = f"""
         SELECT *
         FROM Users
-        WHERE username = '{username}';
-        """
+        WHERE username = '{htmlify(username)}';
+        """ #added htmlify to avoid SQL injection
     user = sqlite.query(get_user, one=True)
 
     if comments_form.is_submitted():
@@ -117,14 +124,14 @@ def comments(username: str, post_id: int):
     get_post = f"""
         SELECT *
         FROM Posts AS p JOIN Users AS u ON p.u_id = u.id
-        WHERE p.id = {post_id};
-        """
+        WHERE p.id = {htmlify(post_id)};
+        """ #added htmlify to avoid SQL injection
     get_comments = f"""
         SELECT DISTINCT *
         FROM Comments AS c JOIN Users AS u ON c.u_id = u.id
-        WHERE c.p_id={post_id}
+        WHERE c.p_id={htmlify(post_id)}
         ORDER BY c.creation_time DESC;
-        """
+        """ #added htmlify to avoid SQL injection
     post = sqlite.query(get_post, one=True)
     comments = sqlite.query(get_comments)
     return render_template(
@@ -144,16 +151,16 @@ def friends(username: str):
     get_user = f"""
         SELECT *
         FROM Users
-        WHERE username = '{username}';
-        """
+        WHERE username = '{htmlify(username)}';
+        """ #added htmlify to avoid SQL injection
     user = sqlite.query(get_user, one=True)
 
     if friends_form.is_submitted():
         get_friend = f"""
             SELECT *
             FROM Users
-            WHERE username = '{friends_form.username.data}';
-            """
+            WHERE username = '{htmlify(friends_form.username.data)}';
+            """ #added htmlify to avoid SQL injection
         friend = sqlite.query(get_friend, one=True)
         get_friends = f"""
             SELECT f_id
@@ -197,18 +204,18 @@ def profile(username: str):
     get_user = f"""
         SELECT *
         FROM Users
-        WHERE username = '{username}';
-        """
+        WHERE username = '{htmlify(username)}';
+        """ #added htmlify to avoid SQL injection
     user = sqlite.query(get_user, one=True)
 
     if profile_form.is_submitted():
         update_profile = f"""
             UPDATE Users
-            SET education='{profile_form.education.data}', employment='{profile_form.employment.data}',
-                music='{profile_form.music.data}', movie='{profile_form.movie.data}',
-                nationality='{profile_form.nationality.data}', birthday='{profile_form.birthday.data}'
-            WHERE username='{username}';
-            """
+            SET education='{htmlify(profile_form.education.data)}', employment='{htmlify(profile_form.employment.data)}',
+                music='{htmlify(profile_form.music.data)}', movie='{htmlify(profile_form.movie.data)}',
+                nationality='{htmlify(profile_form.nationality.data)}', birthday='{htmlify(profile_form.birthday.data)}'
+            WHERE username='{htmlify(username)}';
+            """ #added htmlify to avoid SQL injection
         sqlite.query(update_profile)
         return redirect(url_for("profile", username=username))
 
