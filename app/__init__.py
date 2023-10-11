@@ -9,7 +9,7 @@ from app.config import Config
 from app.database import SQLite3
 
 # from flask_login import LoginManager
-# from flask_bcrypt import Bcrypt
+from flask_bcrypt import Bcrypt             # <---- pdm add flask-bcrypt
 # from flask_wtf.csrf import CSRFProtect
 
 # Instantiate and configure the app
@@ -23,7 +23,7 @@ sqlite = SQLite3(app, schema="schema.sql")
 # login = LoginManager(app)
 
 # TODO: The passwords are stored in plaintext, this is not secure at all. I should probably use bcrypt or something
-# bcrypt = Bcrypt(app)
+bcrypt = Bcrypt(app)
 
 # TODO: The CSRF protection is not working, I should probably fix that
 # csrf = CSRFProtect(app)

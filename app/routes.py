@@ -8,8 +8,9 @@ from pathlib import Path
 
 from flask import flash, redirect, render_template, send_from_directory, url_for
 
-from app import app, sqlite
+from app import app, sqlite, bcrypt
 from app.forms import CommentsForm, FriendsForm, IndexForm, PostForm, ProfileForm
+
 
 @app.route("/", methods=["GET", "POST"])
 @app.route("/index", methods=["GET", "POST"])
@@ -26,10 +27,18 @@ def index():
     register_form = index_form.register
 
     if login_form.is_submitted() and login_form.submit.data:
+        #pw_hash = bcrypt.generate_password_hash('hunter2')
+        #bcrypt.check_password_hash(pw_hash, 'hunter2') # returns True
+        
+        salt = "this is kind of secret"
+        password = login_form.password.data
+        pw_hash = bcrypt.hashpw(password, salt)
+
         get_user = f"""
             SELECT *
             FROM Users
-            WHERE username = '{login_form.username.data}';
+            WHERE username = '{login_form.username.data}'
+            AND password = '{pw_hash}';
             """
         user = sqlite.query(get_user, one=True)
 
@@ -41,9 +50,15 @@ def index():
             return redirect(url_for("stream", username=login_form.username.data))
 
     elif register_form.is_submitted() and register_form.submit.data and register_form.validate(register_form):
+        
+        # Password encryption
+        salt = "this is kind of secret"
+        password = register_form.password.data
+        pw_hash = bcrypt.hashpw(password, salt)
+        
         insert_user = f"""
             INSERT INTO Users (username, first_name, last_name, password)
-            VALUES ('{register_form.username.data}', '{register_form.first_name.data}', '{register_form.last_name.data}', '{register_form.password.data}');
+            VALUES ('{register_form.username.data}', '{register_form.first_name.data}', '{register_form.last_name.data}', '{pw_hash}');
             """
         sqlite.query(insert_user)
         flash("User successfully created!", category="success")

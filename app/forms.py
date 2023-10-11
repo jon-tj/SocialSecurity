@@ -18,7 +18,7 @@ Example:
 from datetime import datetime
 from typing import cast
 
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm         #<------- pip install Flask-WTF
 from wtforms import (
     BooleanField,
     DateField,
