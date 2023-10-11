@@ -55,10 +55,15 @@ class RegisterForm(FlaskForm):
 
     first_name = StringField(label="First Name", render_kw={"placeholder": "First Name"})
     last_name = StringField(label="Last Name", render_kw={"placeholder": "Last Name"})
-    username = StringField(label="Username", render_kw={"placeholder": "Username"})
+    username = StringField(
+        label="Username",
+        render_kw={"placeholder": "Username"},
+        validators=[
+            validators.DataRequired(message="Username cannot be empty."),
+            ])
     password = PasswordField(
         validators=[
-            validators.DataRequired(message="Please enter a password."),
+            validators.DataRequired(message="Password cannot be empty."),
             validators.EqualTo('confirm_password', message='Passwords must match')
         ],
         label="Password",
@@ -78,7 +83,14 @@ class IndexForm(FlaskForm):
 class PostForm(FlaskForm):
     """Provides the post form for the application."""
 
-    content = TextAreaField(label="New Post", render_kw={"placeholder": "What are you thinking about?"})
+    content = TextAreaField(
+        label="New Post",
+        render_kw={"placeholder": "What are you thinking about?"},
+        validators=[
+            validators.length(max=2000,message="Post cannot exceed 2000 characters."),
+            validators.regexp(regex="[^<>|]",message="Post contains illegal entities.")
+        ]
+        )
     image = FileField(label="Image")
     submit = SubmitField(label="Post")
 
