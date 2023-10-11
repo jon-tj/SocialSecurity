@@ -11,13 +11,10 @@ from flask import flash, redirect, render_template, send_from_directory, url_for
 from app import app, sqlite, bcrypt
 from app.forms import CommentsForm, FriendsForm, IndexForm, PostForm, ProfileForm
 
-<<<<<<< HEAD
-=======
 import re
 
 def htmlify(content):
     return content.replace("'",'&apos;').replace('"','&quot;')
->>>>>>> 0f09edb8cbf12558e072e358951c7d6d795a9bfe
 
 @app.route("/", methods=["GET", "POST"])
 @app.route("/index", methods=["GET", "POST"])
@@ -44,14 +41,9 @@ def index():
         get_user = f"""
             SELECT *
             FROM Users
-<<<<<<< HEAD
-            WHERE username = '{login_form.username.data}'
+            WHERE username = '{htmlify(login_form.username.data)}'
             AND password = '{pw_hash}';
-            """
-=======
-            WHERE username = '{htmlify(login_form.username.data)}';
             """ #added htmlify to avoid SQL injection
->>>>>>> 0f09edb8cbf12558e072e358951c7d6d795a9bfe
         user = sqlite.query(get_user, one=True)
 
         if user is None:
