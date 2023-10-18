@@ -16,6 +16,13 @@ import re
 def htmlify(content):
     return escape(content)
 
+def hash_password(content):
+    #password = login_form.password.data
+
+    salt = "this is kind of secret"
+    pw_hash = bcrypt.generate_password_hash(content)
+    return pw_hash
+
 @app.route("/", methods=["GET", "POST"])
 @app.route("/index", methods=["GET", "POST"])
 def index():
@@ -34,9 +41,8 @@ def index():
         #pw_hash = bcrypt.generate_password_hash('hunter2')
         #bcrypt.check_password_hash(pw_hash, 'hunter2') # returns True
         
-        salt = "this is kind of secret"
-        password = login_form.password.data
-        pw_hash = bcrypt.generate_password_hash(password)
+        pw_hash = hash_password(register_form.password.data)
+        
         get_user = f"""
             SELECT *
             FROM Users
@@ -55,10 +61,8 @@ def index():
     elif register_form.is_submitted() and register_form.submit.data and register_form.validate(register_form):
         
         # Password encryption
-        salt = "this is kind of secret"
-        password = register_form.password.data
-        pw_hash = bcrypt.generate_password_hash(password)
-        
+        pw_hash = hash_password(register_form.password.data)
+
         insert_user = f"""
             INSERT INTO Users (username, first_name, last_name, password)
             VALUES ('{htmlify(register_form.username.data)}', '{htmlify(register_form.first_name.data)}', '{htmlify(register_form.last_name.data)}', '{htmlify(pw_hash)}');
