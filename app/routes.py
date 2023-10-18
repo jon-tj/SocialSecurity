@@ -62,19 +62,13 @@ def index():
         
         insert_user = f"""
             INSERT INTO Users (username, first_name, last_name, password)
-<<<<<<< HEAD
-            VALUES ('{register_form.username.data}', '{register_form.first_name.data}', '{register_form.last_name.data}', '{pw_hash}');
+            VALUES ('{htmlify(register_form.username.data)}', '{htmlify(register_form.first_name.data)}', '{htmlify(register_form.last_name.data)}', '{htmlify(pw_hash)}');
             """
-=======
-            VALUES ('{htmlify(register_form.username.data)}', '{htmlify(register_form.first_name.data)}', '{htmlify(register_form.last_name.data)}', '{htmlify(register_form.password.data)}');
-            """ #added htmlify to avoid SQL injection
->>>>>>> 0f09edb8cbf12558e072e358951c7d6d795a9bfe
         sqlite.query(insert_user)
         flash("User successfully created!", category="success")
         return redirect(url_for("index"))
 
     return render_template("index.html.j2", title="Welcome", form=index_form)
-
 
 @app.route("/stream/<string:username>", methods=["GET", "POST"])
 def stream(username: str):
