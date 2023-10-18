@@ -21,9 +21,7 @@ def htmlify(content):
     return content
 
 def hash_password(content):
-    #password = login_form.password.data
-
-    salt = "this is kind of secret"
+    #salt = "this is kind of secret"
     pw_hash = bcrypt.generate_password_hash(content)
     #print("GENERATED HASH:-------------------------------------------",pw_hash)
     return pw_hash
