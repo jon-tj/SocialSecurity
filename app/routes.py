@@ -61,8 +61,9 @@ def index():
         
         insert_user = f"""
             INSERT INTO Users (username, first_name, last_name, password)
-            VALUES ('{htmlify(register_form.username.data)}', '{htmlify(register_form.first_name.data)}', '{htmlify(register_form.last_name.data)}', '{htmlify(pw_hash)}');
-            """
+            VALUES ('{htmlify(register_form.username.data)}', '{htmlify(register_form.first_name.data)}', '{htmlify(register_form.last_name.data)}', '{pw_hash}');
+            """ #added htmlify to avoid SQL injection
+        
         sqlite.query(insert_user)
         flash("User successfully created!", category="success")
         return redirect(url_for("index"))
