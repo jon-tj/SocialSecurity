@@ -14,7 +14,11 @@ from html import escape
 import re
 
 def htmlify(content):
-    return escape(content)
+    if isinstance(content, bytes):
+        return escape(content.decode('utf-8'))
+    elif isinstance(content, str):
+        return escape(content)
+    return content
 
 def hash_password(content):
     #password = login_form.password.data
@@ -67,6 +71,7 @@ def index():
             INSERT INTO Users (username, first_name, last_name, password)
             VALUES ('{htmlify(register_form.username.data)}', '{htmlify(register_form.first_name.data)}', '{htmlify(register_form.last_name.data)}', '{htmlify(pw_hash)}');
             """
+        print(insert_user)
         sqlite.query(insert_user)
         flash("User successfully created!", category="success")
         return redirect(url_for("index"))
