@@ -17,9 +17,7 @@ def htmlify(content):
     return content.replace("'",'&apos;').replace('"','&quot;')
 
 def hash_password(content):
-    #password = login_form.password.data
-
-    salt = "this is kind of secret"
+    #salt = "this is kind of secret"
     pw_hash = bcrypt.generate_password_hash(content)
     return pw_hash
 
