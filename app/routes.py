@@ -66,6 +66,14 @@ def index():
         # Password encryption
         pw_hash = hash_password(register_form.password.data)
 
+        check_user = f"""
+            SELECT username
+            FROM Users
+            WHERE username = '{htmlify(register_form.username.data)}';
+        """
+        if sqlite.query(check_user):
+            flash("Username is taken!", category="warning")
+        
         insert_user = f"""
             INSERT INTO Users (username, first_name, last_name, password)
             VALUES ('{htmlify(register_form.username.data)}', '{htmlify(register_form.first_name.data)}', '{htmlify(register_form.last_name.data)}', '{htmlify(pw_hash)}');

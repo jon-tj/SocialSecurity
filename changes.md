@@ -18,3 +18,4 @@ used wtform.validators
 
 # Database
 ## encrypted passwords
+using flask-bcrypt (really just bcrypt) to hash passwords before storing in sql.
