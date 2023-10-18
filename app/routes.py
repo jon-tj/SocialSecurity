@@ -10,11 +10,11 @@ from flask import flash, redirect, render_template, send_from_directory, url_for
 
 from app import app, sqlite, bcrypt
 from app.forms import CommentsForm, FriendsForm, IndexForm, PostForm, ProfileForm
-
+from html import escape
 import re
 
 def htmlify(content):
-    return content.replace("'",'&apos;').replace('"','&quot;')
+    return escape(content)
 
 @app.route("/", methods=["GET", "POST"])
 @app.route("/index", methods=["GET", "POST"])
@@ -61,9 +61,8 @@ def index():
         
         insert_user = f"""
             INSERT INTO Users (username, first_name, last_name, password)
-            VALUES ('{htmlify(register_form.username.data)}', '{htmlify(register_form.first_name.data)}', '{htmlify(register_form.last_name.data)}', '{pw_hash}');
-            """ #added htmlify to avoid SQL injection
-        
+            VALUES ('{htmlify(register_form.username.data)}', '{htmlify(register_form.first_name.data)}', '{htmlify(register_form.last_name.data)}', '{htmlify(pw_hash)}');
+            """
         sqlite.query(insert_user)
         flash("User successfully created!", category="success")
         return redirect(url_for("index"))
