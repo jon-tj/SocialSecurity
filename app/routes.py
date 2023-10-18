@@ -20,7 +20,7 @@ def hash_password(content):
     #password = login_form.password.data
 
     salt = "this is kind of secret"
-    pw_hash = bcrypt.generate_password_hash(password)
+    pw_hash = bcrypt.generate_password_hash(content)
     return pw_hash
 
 @app.route("/", methods=["GET", "POST"])
