@@ -71,7 +71,6 @@ def index():
 
     return render_template("index.html.j2", title="Welcome", form=index_form)
 
-
 @app.route("/stream/<string:username>", methods=["GET", "POST"])
 def stream(username: str):
     """Provides the stream page for the application.
