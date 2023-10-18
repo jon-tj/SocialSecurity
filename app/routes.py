@@ -25,6 +25,7 @@ def hash_password(content):
 
     salt = "this is kind of secret"
     pw_hash = bcrypt.generate_password_hash(content)
+    #print("GENERATED HASH:-------------------------------------------",pw_hash)
     return pw_hash
 
 @app.route("/", methods=["GET", "POST"])
@@ -46,21 +47,20 @@ def index():
         #bcrypt.check_password_hash(pw_hash, 'hunter2') # returns True
         
         #print("pwd received:---------------------------",content)
-        pw_hash = hash_password(login_form.password.data)
         
-        get_user = f"""
-            SELECT *
+        
+        get_pw_hash = f"""
+            SELECT password
             FROM Users
-            WHERE username = '{htmlify(login_form.username.data)}'
-            AND password = '{htmlify(pw_hash)}';
+            WHERE username = '{htmlify(login_form.username.data)}';
             """ #added htmlify to avoid SQL injection
-        user = sqlite.query(get_user, one=True)
+        pw_hash = sqlite.query(get_pw_hash, one=True)
 
-        if user is None:
+        if pw_hash is None:
             flash("Sorry, this user does not exist!", category="warning")
-        elif user["password"] != login_form.password.data:
+        elif not bcrypt.check_password_hash(pw_hash["password"],login_form.password.data.encode('utf-8')):
             flash("Sorry, wrong password!", category="warning")
-        elif user["password"] == login_form.password.data:
+        else:
             return redirect(url_for("stream", username=login_form.username.data))
 
     elif register_form.is_submitted() and register_form.submit.data and register_form.validate(register_form):
