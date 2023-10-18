@@ -42,9 +42,7 @@ def index():
     if login_form.is_submitted() and login_form.submit.data:
         #pw_hash = bcrypt.generate_password_hash('hunter2')
         #bcrypt.check_password_hash(pw_hash, 'hunter2') # returns True
-        
-        pw_hash = hash_password(register_form.password.data)
-        
+        pw_hash = hash_password(login_form.password.data)
         get_user = f"""
             SELECT *
             FROM Users
