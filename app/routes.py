@@ -36,8 +36,7 @@ def index():
         
         salt = "this is kind of secret"
         password = login_form.password.data
-        pw_hash = bcrypt.hashpw(password, salt)
-
+        pw_hash = bcrypt.generate_password_hash(password)
         get_user = f"""
             SELECT *
             FROM Users
@@ -58,7 +57,7 @@ def index():
         # Password encryption
         salt = "this is kind of secret"
         password = register_form.password.data
-        pw_hash = bcrypt.hashpw(password, salt)
+        pw_hash = bcrypt.generate_password_hash(password)
         
         insert_user = f"""
             INSERT INTO Users (username, first_name, last_name, password)
