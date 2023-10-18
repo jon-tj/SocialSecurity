@@ -10,7 +10,7 @@ Simple regex check for [^<>|] wtforms validator.
 used wtform.validators
 
 ## username is taken!
-
+check sql request for username is not none.
 
 # Broken access control
 ## Implement sessions
