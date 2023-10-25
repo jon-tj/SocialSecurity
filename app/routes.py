@@ -43,18 +43,12 @@ def index():
     if login_form.is_submitted() and login_form.submit.data:
         #pw_hash = bcrypt.generate_password_hash('hunter2')
         #bcrypt.check_password_hash(pw_hash, 'hunter2') # returns True
-<<<<<<< HEAD
-        pw_hash = hash_password(login_form.password.data)
-        get_user = f"""
-            SELECT *
-=======
         
         #print("pwd received:---------------------------",content)
         
         
         get_pw_hash = f"""
             SELECT password
->>>>>>> 0b5b003fb875061d8fcfbb648d12e7dbf943005d
             FROM Users
             WHERE username = '{htmlify(login_form.username.data)}';
             """ #added htmlify to avoid SQL injection
