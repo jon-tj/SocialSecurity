@@ -10,7 +10,7 @@ Simple regex check for [^<>|] wtforms validator.
 used wtform.validators
 
 ## username is taken!
-
+check sql request for username is not none.
 
 # Broken access control
 ## Implement sessions
@@ -18,3 +18,4 @@ used wtform.validators
 
 # Database
 ## encrypted passwords
+using flask-bcrypt (really just bcrypt) to hash passwords before storing in sql.
