@@ -8,10 +8,11 @@ from pathlib import Path
 
 from flask import flash, redirect, render_template, send_from_directory, url_for
 
-from app import app, sqlite, bcrypt
+from app import app, sqlite, bcrypt, login_manager, UserMixin, login_user, current_user, logout_user
 from app.forms import CommentsForm, FriendsForm, IndexForm, PostForm, ProfileForm
 from html import escape
 import re
+
 
 def htmlify(content):
     if isinstance(content, bytes):
@@ -21,10 +22,47 @@ def htmlify(content):
     return content
 
 def hash_password(content):
-    #salt = "this is kind of secret"
+    #salt = "this is kind of secret" 
+    #yikes - each user gets an unique salt (which is (stored together with the password) using the bcrypt package)
+
     pw_hash = bcrypt.generate_password_hash(content)
-    #print("GENERATED HASH:-------------------------------------------",pw_hash)
     return pw_hash
+
+def check_logged_in_user(user):
+
+    if user is None:
+        # User was not found in the sql query
+        errMsg = {
+            "type": "userDoesNotExist",
+            "flash": "User not found"
+        }
+        return errMsg
+
+    if not current_user.is_authenticated:
+        # User is not logged in
+        errMsg = {
+            "type": "userIsNotLoggedIn",
+            "flash": "Oh naugthy, naugthy, you have to log in"
+        }
+        return errMsg
+    
+    if int(current_user.id) != int(user["id"]):
+        # User is not accessing their own logged in user page (directory traversal)
+        errMsg = {
+            "type": "notLoggedIntToThisUser",
+            "flash": "Dont mess with other users!"
+        }
+        return errMsg
+    
+    return None # No errors found
+
+class User(UserMixin):
+    def __init__(self, user_id):
+        self.id = user_id
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User(user_id)
 
 @app.route("/", methods=["GET", "POST"])
 @app.route("/index", methods=["GET", "POST"])
@@ -40,13 +78,11 @@ def index():
     login_form = index_form.login
     register_form = index_form.register
 
+    # For any redirects to index, by default the user should be logged out, could probably be done in a more clean way
+    logout_user()
+
     if login_form.is_submitted() and login_form.submit.data:
-        #pw_hash = bcrypt.generate_password_hash('hunter2')
-        #bcrypt.check_password_hash(pw_hash, 'hunter2') # returns True
-        
-        #print("pwd received:---------------------------",content)
-        
-        
+
         get_pw_hash = f"""
             SELECT password
             FROM Users
@@ -59,6 +95,17 @@ def index():
         elif not bcrypt.check_password_hash(pw_hash["password"],login_form.password.data.encode('utf-8')):
             flash("Sorry, wrong password!", category="warning")
         else:
+            get_user_id = f"""
+            SELECT id
+            FROM Users
+            WHERE username = '{htmlify(login_form.username.data)}';
+            """ 
+
+            user_id = sqlite.query(get_user_id, one=True)
+            user_id = int(user_id["id"])
+            user = User(user_id)
+            login_user(user)
+
             return redirect(url_for("stream", username=login_form.username.data))
 
     elif register_form.is_submitted() and register_form.submit.data and register_form.validate(register_form):
@@ -76,9 +123,11 @@ def index():
         
         insert_user = f"""
             INSERT INTO Users (username, first_name, last_name, password)
-            VALUES ('{htmlify(register_form.username.data)}', '{htmlify(register_form.first_name.data)}', '{htmlify(register_form.last_name.data)}', '{htmlify(pw_hash)}');
+            VALUES ('{htmlify(register_form.username.data)}','{htmlify(register_form.first_name.data)}',
+            '{htmlify(register_form.last_name.data)}', '{htmlify(pw_hash)}');
             """
-        print(insert_user)
+        
+        #print(insert_user)
         sqlite.query(insert_user)
         flash("User successfully created!", category="success")
         return redirect(url_for("index"))
@@ -101,6 +150,12 @@ def stream(username: str):
         """ #added htmlify to avoid SQL injection
     user = sqlite.query(get_user, one=True)
 
+    # Check if the user is logged in, otherwise redirect to /index
+    errMsg = check_logged_in_user(user)
+    if errMsg is not None:
+        flash(errMsg["flash"], category="warning")
+        return redirect(url_for("index"))
+
     if post_form.is_submitted() and post_form.validate(): #? Added validation
         post_form.image.data.filename = re.sub(r"[\'\"/\.]", "", post_form.image.data.filename)
         #post_form.image.data.filename=post_form.image.data.filename.replace("'","").replace('"',"").replace("..","").replace("/","")
@@ -117,10 +172,10 @@ def stream(username: str):
         return redirect(url_for("stream", username=username))
 
     get_posts = f"""
-         SELECT p.*, u.*, (SELECT COUNT(*) FROM Comments WHERE p_id = p.id) AS cc
-         FROM Posts AS p JOIN Users AS u ON u.id = p.u_id
-         WHERE p.u_id IN (SELECT u_id FROM Friends WHERE f_id = {user["id"]}) OR p.u_id IN (SELECT f_id FROM Friends WHERE u_id = {user["id"]}) OR p.u_id = {user["id"]}
-         ORDER BY p.creation_time DESC;
+        SELECT p.*, u.*, (SELECT COUNT(*) FROM Comments WHERE p_id = p.id) AS cc
+        FROM Posts AS p JOIN Users AS u ON u.id = p.u_id
+        WHERE p.u_id IN (SELECT u_id FROM Friends WHERE f_id = {user["id"]}) OR p.u_id IN (SELECT f_id FROM Friends WHERE u_id = {user["id"]}) OR p.u_id = {user["id"]}
+        ORDER BY p.creation_time DESC;
         """
     posts = sqlite.query(get_posts)
     return render_template("stream.html.j2", title="Stream", username=username, form=post_form, posts=posts)
@@ -141,6 +196,12 @@ def comments(username: str, post_id: int):
         WHERE username = '{htmlify(username)}';
         """ #added htmlify to avoid SQL injection
     user = sqlite.query(get_user, one=True)
+
+    # Check if the user is logged in, otherwise redirect to /index
+    errMsg = check_logged_in_user(user)
+    if errMsg is not None:
+        flash(errMsg["flash"], category="warning")
+        return redirect(url_for("index"))
 
     if comments_form.is_submitted():
         insert_comment = f"""
@@ -182,6 +243,12 @@ def friends(username: str):
         WHERE username = '{htmlify(username)}';
         """ #added htmlify to avoid SQL injection
     user = sqlite.query(get_user, one=True)
+
+    # Check if the user is logged in, otherwise redirect to /index
+    errMsg = check_logged_in_user(user)
+    if errMsg is not None:
+        flash(errMsg["flash"], category="warning")
+        return redirect(url_for("index"))
 
     if friends_form.is_submitted():
         get_friend = f"""
@@ -236,15 +303,30 @@ def profile(username: str):
         """ #added htmlify to avoid SQL injection
     user = sqlite.query(get_user, one=True)
 
+    # Check if the user is logged in, otherwise redirect to /index
+    errMsg = check_logged_in_user(user)
+    if errMsg is not None:
+        e = errMsg["type"]
+        if e == "userDoesNotExist" or e == "userIsNotLoggedIn":
+            flash(errMsg["flash"], category="warning")
+            return redirect(url_for("index"))        
+
     if profile_form.is_submitted():
-        update_profile = f"""
-            UPDATE Users
-            SET education='{htmlify(profile_form.education.data)}', employment='{htmlify(profile_form.employment.data)}',
-                music='{htmlify(profile_form.music.data)}', movie='{htmlify(profile_form.movie.data)}',
-                nationality='{htmlify(profile_form.nationality.data)}', birthday='{htmlify(profile_form.birthday.data)}'
-            WHERE username='{htmlify(username)}';
-            """ #added htmlify to avoid SQL injection
-        sqlite.query(update_profile)
+
+        # Only logged in users with this exact user can edit the user profile
+        if errMsg is not None:
+            if errMsg["type"] == "notLoggedIntToThisUser":
+                flash(errMsg["flash"], category="warning")
+        
+        else:
+            update_profile = f"""
+                UPDATE Users
+                SET education='{htmlify(profile_form.education.data)}', employment='{htmlify(profile_form.employment.data)}',
+                    music='{htmlify(profile_form.music.data)}', movie='{htmlify(profile_form.movie.data)}',
+                    nationality='{htmlify(profile_form.nationality.data)}', birthday='{htmlify(profile_form.birthday.data)}'
+                WHERE username='{htmlify(username)}';
+                """ #added htmlify to avoid SQL injection
+            sqlite.query(update_profile)
         return redirect(url_for("profile", username=username))
 
     return render_template("profile.html.j2", title="Profile", username=username, user=user, form=profile_form)
