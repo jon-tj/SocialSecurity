@@ -120,16 +120,15 @@ def index():
         """
         if sqlite.query(check_user):
             flash("Username is taken!", category="warning")
-        
-        insert_user = f"""
-            INSERT INTO Users (username, first_name, last_name, password)
-            VALUES ('{htmlify(register_form.username.data)}','{htmlify(register_form.first_name.data)}',
-            '{htmlify(register_form.last_name.data)}', '{htmlify(pw_hash)}');
-            """
-        
-        #print(insert_user)
-        sqlite.query(insert_user)
-        flash("User successfully created!", category="success")
+        else:
+            insert_user = f"""
+                INSERT INTO Users (username, first_name, last_name, password)
+                VALUES ('{htmlify(register_form.username.data)}','{htmlify(register_form.first_name.data)}',
+                '{htmlify(register_form.last_name.data)}', '{htmlify(pw_hash)}');
+                """
+            #print(insert_user)
+            sqlite.query(insert_user)
+            flash("User successfully created!", category="success")
         return redirect(url_for("index"))
 
     return render_template("index.html.j2", title="Welcome", form=index_form)
